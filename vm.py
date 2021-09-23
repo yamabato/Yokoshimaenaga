@@ -15,7 +15,7 @@ class VM:
         "log",
         "int", "flt",
         "psh", "pop", "clr", "len", "cpy",
-        "jmp",
+        "jmp", "gln",
         "chr", "prt", "gch", "gtx",
     ]
 
@@ -40,6 +40,7 @@ class VM:
 
     ONE_PARAMETER = [
         "psh", "pop", "len",
+        "gln",
         "chr", "prt", "gch", "gtx",
     ]
     
@@ -264,6 +265,10 @@ class VM:
                 pass
 
             return True
+
+        elif operation == "gln":
+            r1 = p1
+            return self.set_register_value(r1, self.current_line_number)
 
         elif operation == "psh":
             ok, v1 = self.eval_value(p1)
