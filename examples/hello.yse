@@ -1,0 +1,20 @@
+;スタックにHello, World!文字列をプッシュ
+psh 10
+psh 33
+psh 100
+psh 108
+psh 114
+psh 111
+psh 87
+psh 32
+psh 44
+psh 111
+psh 108
+psh 108
+psh 101
+psh 72
+
+;len a = len 0
+len 0
+
+prt $a

@@ -274,7 +274,7 @@ class VM:
            ok, v1 = self.eval_value(p1)
            if not ok: return False
 
-           print(chr(v1))
+           print(chr(v1), end="")
            return True
 
         elif operation == "prt":
@@ -283,8 +283,8 @@ class VM:
            if (not ok) or (v1 < 0 or v1 > len(self.stack)) or (not isinstance(v1, int)): return False
 
            for i in range(v1):
-               v = stack.pop()
-               print(chr(v))
+               v = self.stack.pop()
+               print(chr(v), end="")
 
            return True
 
