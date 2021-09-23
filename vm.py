@@ -7,17 +7,17 @@ class VM:
     ONE_REGISTER_NAME = "or"
 
     OPERATIONS = [
+        "set",
         "add", "sub", "mul", "div", "pow", "mod",
         "and", "or", "xor",
         "equ", "neq", "gtr", "lss", "geq", "leq",
-        
         "int", "flt",
         "psh", "pop", "clr", "len", "cpy",
         "jmp",
         "chr", "prt", "gch", "gtx",
     ]
 
-    self.OPERATORS = [
+    OPERATORS = [
         "add", "sub", "mul", "div", "pow", "mod",
         "and", "or", "xor",
         "equ", "neq", "gtr", "lss", "geq", "leq",
@@ -30,6 +30,7 @@ class VM:
     ]
 
     TWO_PARAMETERS = [
+        "set",
         "int", "flt"
         "jmp", 
     ]
@@ -43,14 +44,14 @@ class VM:
         "clr", "cpy", 
     ]
 
-    self.PARAM_NUMBER = {o: 3 for o in THREE_PARAMETERS}
-    self.PARAM_NUMBER.update({o: 2 for o in TWO_PARAMETERS})
-    self.PARAM_NUMBER.update({o: 1 for o in ONE_PARAMETER})
-    self.PARAM_NUMBER.update({o: 0 for o in NO_PARAMETERS})
+    PARAM_NUMBER = {o: 3 for o in THREE_PARAMETERS}
+    PARAM_NUMBER.update({o: 2 for o in TWO_PARAMETERS})
+    PARAM_NUMBER.update({o: 1 for o in ONE_PARAMETER})
+    PARAM_NUMBER.update({o: 0 for o in NO_PARAMETERS})
 
-    self.REGISTER_LIST = list(string.ascii_lowercase) + [ZERO_REGISTER_NAME, ONE_REGISTER_NAME]
-    self.REGISTER_N = len(self.REGISTER_LIST)
-    self.REGISTER_NUMBER = {name: rn for rn, name in enumerate(self.REGISTER_LIST)}
+    REGISTER_LIST = list(string.ascii_lowercase) + [ZERO_REGISTER_NAME, ONE_REGISTER_NAME]
+    REGISTER_N = len(REGISTER_LIST)
+    REGISTER_NUMBER = {name: rn for rn, name in enumerate(REGISTER_LIST)}
  
     def __init__(self, code):
         self.code = code
@@ -113,7 +114,7 @@ class VM:
         if value[0] == ":" and value[1:] in self.label:
             return True, self.label_to_line_number(value[0])[1]
 
-        else False, -1
+        return False, -1
 
     def scan_labels(self):
         for n, line in enumerate(self.lines):
@@ -206,6 +207,14 @@ class VM:
             
             return self.set_register_value(r1, v)
         
+        elif operation == "set":
+            ok, v1 = self.eval_value(p1)
+            if not ok: return False
+
+            r1 = p2
+
+            return self.set_register_value(r1, v1)
+        
         elif operation in ["int", "flt"]:
             ok, v1 = self.eval_value(p1)
             if not ok: return False
@@ -248,20 +257,20 @@ class VM:
 
             return self.set_register_value(r1, self.stack.pop())
 
-       elif operation == "len":
+        elif operation == "len":
            v = len(self.stack)
            r1 = p1
 
            return self.set_register_value(r1, v)
 
-       elif operation == "chr":
+        elif operation == "chr":
            ok, v1 = self.eval_value(p1)
            if not ok: return False
 
            print(chr(v1))
            return True
 
-       elif operation == "prt":
+        elif operation == "prt":
            ok, v1 = self.eval_value(p1)
 
            if (not ok) or (v1 < 0 or v1 > len(self.stack)) or (not isinstance(v1, int)): return False
@@ -272,7 +281,7 @@ class VM:
 
            return True
 
-       elif operation == "gch":
+        elif operation == "gch":
            r1 = p1
 
            inp = input()
@@ -282,7 +291,7 @@ class VM:
 
            self.set_register_value(r1, v)
 
-       elif operation == "gtx":
+        elif operation == "gtx":
            r1 = p1
            inp = input()
 
