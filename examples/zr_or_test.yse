@@ -3,3 +3,7 @@ chr $a
 
 add $or 48 b
 chr $b
+
+set 10 zr
+add $zr 48 a
+chr $a

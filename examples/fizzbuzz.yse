@@ -1,0 +1,72 @@
+set 0 a
+
+:loop
+add 1 $a a
+
+mod $a 15 c
+equ $c 0 d
+jmp $d :fizzbuzz
+
+mod $a 3 c
+equ $c 0 d
+jmp $d :fizz
+
+mod $a 5 c
+equ $c 0 d
+jmp $d :buzz
+
+jmp 1 :num
+
+:fizzbuzz
+psh 122
+psh 122
+psh 117
+psh 66
+psh 122
+psh 122
+psh 105
+psh 70
+jmp 1 :print
+
+:fizz
+psh 122
+psh 122
+psh 105
+psh 70
+jmp 1 :print
+
+:buzz
+psh 122
+psh 122
+psh 117
+psh 66
+jmp 1 :print
+
+:num
+log 10 $a f
+add 1 $f f
+int $f f
+set 0 g
+set $a j
+:num_loop
+add 1 $g g
+
+mod $j 10 i
+add 48 $i i
+psh $i
+div $j 10 j
+int $j j
+
+lss $g $f h
+jmp $h :num_loop
+
+jmp 1 :print
+
+:print
+len e
+prt $e
+psh 10
+prt 1
+
+lss $a 100 b
+jmp $b :loop

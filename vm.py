@@ -1,5 +1,6 @@
 #encoding: utf-8
 import string
+import math
 import sys
 
 class VM:
@@ -11,6 +12,7 @@ class VM:
         "add", "sub", "mul", "div", "pow", "mod",
         "and", "or", "xor",
         "equ", "neq", "gtr", "lss", "geq", "leq",
+        "log",
         "int", "flt",
         "psh", "pop", "clr", "len", "cpy",
         "jmp",
@@ -27,11 +29,12 @@ class VM:
         "add", "sub", "mul", "div", "pow", "mod",
         "and", "or", "xor",
         "equ", "neq", "gtr", "lss", "geq", "leq",
+        "log",
     ]
 
     TWO_PARAMETERS = [
         "set",
-        "int", "flt"
+        "int", "flt",
         "jmp", 
     ]
 
@@ -56,7 +59,6 @@ class VM:
     def __init__(self, code):
         self.code = code
         self.lines = self.code.split("\n")
-        self.scan_labels()
 
         self.current_line_number = 0
 
@@ -66,6 +68,7 @@ class VM:
         self.register[self.REGISTER_LIST.index("or")] = 1
 
         self.label = {}
+        self.scan_labels()
 
     def set_register_value(self, register, value):
         ok, rn = self.eval_value(register)
@@ -118,14 +121,15 @@ class VM:
 
         #label name
         if value[0] == ":" and value[1:] in self.label:
-            return True, self.label_to_line_number(value[0])[1]
+            return self.label_to_line_number(value)
 
         return False, -1
 
     def scan_labels(self):
         for n, line in enumerate(self.lines):
+            line = line.split()
             if len(line) == 1 and line[0][0] == ":":
-                self.set_label(label, n)
+                self.set_label(line[0], n)
 
     def error(self):
         print(f"An ERROR occurred on line {self.current_line_number + 1}.")
@@ -222,6 +226,17 @@ class VM:
             r1 = p2
 
             return self.set_register_value(r1, v1)
+
+        elif operation == "log":
+            ok1, v1 = self.eval_value(p1)
+            ok2, v2 = self.eval_value(p2)
+            if not (ok1 & ok2): return False
+
+            r1 = p3
+
+            v = math.log(v2, v1)
+
+            return self.set_register_value(r1, v)
         
         elif operation in ["int", "flt"]:
             ok, v1 = self.eval_value(p1)
