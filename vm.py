@@ -65,8 +65,6 @@ class VM:
 
         self.label = {}
 
-        self.run()
-
     def set_register_value(self, register, value):
         return self.set_register_number_value(self.eval_value(register), value)
 
