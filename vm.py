@@ -1,10 +1,57 @@
 #encoding: utf-8
 import string
+import sys
 
 class VM:
     ZERO_REGISTER_NAME = "zr"
     ONE_REGISTER_NAME = "or"
 
+    OPERATIONS = [
+        "add", "sub", "mul", "div", "pow", "mod",
+        "and", "or", "xor",
+        "equ", "neq", "gtr", "lss", "geq", "leq",
+        
+        "int", "flt",
+        "psh", "pop", "clr", "len", "cpy",
+        "jmp",
+        "chr", "prt", "gch", "gtx",
+    ]
+
+    self.OPERATORS = [
+        "add", "sub", "mul", "div", "pow", "mod",
+        "and", "or", "xor",
+        "equ", "neq", "gtr", "lss", "geq", "leq",
+    ]
+
+    THREE_PARAMETERS = [
+        "add", "sub", "mul", "div", "pow", "mod",
+        "and", "or", "xor",
+        "equ", "neq", "gtr", "lss", "geq", "leq",
+    ]
+
+    TWO_PARAMETERS = [
+        "int", "flt"
+        "jmp", 
+    ]
+
+    ONE_PARAMETER = [
+        "psh", "pop", "len",
+        "chr", "prt", "gch", "gtx",
+    ]
+    
+    NO_PARAMETERS = [
+        "clr", "cpy", 
+    ]
+
+    self.PARAM_NUMBER = {o: 3 for o in THREE_PARAMETERS}
+    self.PARAM_NUMBER.update({o: 2 for o in TWO_PARAMETERS})
+    self.PARAM_NUMBER.update({o: 1 for o in ONE_PARAMETER})
+    self.PARAM_NUMBER.update({o: 0 for o in NO_PARAMETERS})
+
+    self.REGISTER_LIST = list(string.ascii_lowercase) + [ZERO_REGISTER_NAME, ONE_REGISTER_NAME]
+    self.REGISTER_N = len(self.REGISTER_LIST)
+    self.REGISTER_NUMBER = {name: rn for rn, name in enumerate(self.REGISTER_LIST)}
+ 
     def __init__(self, code):
         self.code = code
         self.lines = self.code.split("\n")
@@ -14,29 +61,37 @@ class VM:
 
         self.stack = []
 
-        self.register_list = list(string.ascii_lowercase) + [ZERO_REGISTER_NAME, ONE_REGISTER_NAME]
-        self.register_n = len(self.register_list)
-        self.register_number = {name: rn for rn, name in enumerate(self.register_list)}
-        self.register = [0 for i in range(len(self.register_list))]
+        self.register = [0 for i in range(len(self.REGISTER_LIST))]
 
         self.label = {}
 
-    def set_register_value(self, rn, value):
-        if rn < 0 or rn >= self.register_n:
+        self.run()
+
+    def set_register_value(self, register, value):
+        return self.set_register_number_value(self.eval_value(register), value)
+
+    def set_register_number_value(self, rn, value):
+        if rn < 0 or rn >= self.REGISTER_N:
             return False
 
         if not (isinstance(value, int) or isinstance(value, float)):
             return False
 
-        if self.register_list[rn] in [ZERO_REGISTER_NAME, ONE_REGISTER_NAME]:
+        if self.REGISTER_LIST[rn] in [ZERO_REGISTER_NAME, ONE_REGISTER_NAME]:
             return True
 
         self.register[rn] = value
 
         return True
 
-    def set_label(self, name, number):
-        self.label[name] = number
+    def set_label(self, label, number):
+        self.label[label[1:]] = number
+
+    def label_to_line_number(self, label):
+        if label[1:] not in self.label:
+            return False, -1
+
+        return True, self.label[label[1:]]
 
     def eval_value(self, value):
         #numerical value
@@ -49,25 +104,206 @@ class VM:
             return True, float(value)
 
         #register name
-        if value in self.register_list:
-            return True, self.register_number[value]
+        if value in self.REGISTER_LIST:
+            return True, self.REGISTER_NUMBER[value]
 
         #register value
-        if value[0] == "$" and value[1:] in self.register_list:
+        if value[0] == "$" and value[1:] in self.REGISTER_LIST:
             return True, self.register[self.eval_value(value[1:])]
 
         #label name
         if value[0] == ":" and value[1:] in self.label:
-            return True, self.label[value[1:]]
+            return True, self.label_to_line_number(value[0])[1]
 
         else False, -1
 
     def scan_labels(self):
         for n, line in enumerate(self.lines):
             if len(line) == 1 and line[0][0] == ":":
-                self.label[line[0][1:]] = n
+                self.set_label(label, n)
 
-    
+    def error(self):
+        print(f"An ERROR occurred on line {self.current_line_number + 1}.")
 
+        sys.exit(-1)
 
+    def increment_line_number(self):
+        self.current_line_number += 1
 
+    def run(self):
+        while self.current_line_number < len(lines):
+            ok = self.eval_line()
+            if not ok:
+                self.error()
+
+    def eval_line(self):
+        line = self.lines[self.current_line_number]
+        if len(line) == 0:
+            self.increment_line_number()
+            return True
+
+        if line[0][0] in [":", ";"]:
+            self.increment_line_number()
+            return True
+
+        operation = line[0]
+
+        if operation not in self.OPERATIONS:
+            return False
+
+        params = line[1:]
+        param_n = len(params)
+
+        if param_n != PARAM_NUMBER[operation]:
+            return False
+        
+        ok = self.execute_operation(operation, *params)
+        self.increment_line_number()
+
+        return ok
+        
+    def execute_operation(self, operation, p1=None, p2=None, p3=None):
+        if operation in self.OPERATIONS:
+            ok1, v1 = self.eval_value(p1)
+            ok2, v2 = self.eval_value(p2)
+
+            if not (ok1 & ok2): return False
+
+            r1 = p3
+
+            if operation == "add":
+                v = v1 + v2
+            elif operation == "sub":
+                v = v1 - v2
+            elif operation == "mul":
+                v = v1 * v2
+            elif operation == "div":
+                if v2 == 0: return False
+                v = v1 / v2
+            elif operation == "pow":
+                v = v1 ** v2
+            elif operation == "mod":
+                if v2 == 0: return False
+                v = v1 % v2
+
+            elif operation == "and":
+                v = v1 & v2
+            elif operation == "or":
+                v = v1 | v2
+            elif operation == "xor":
+                v = v1 ^ v2
+
+            elif operation == "equ":
+                v = int(v1 == v2)
+            elif operation == "neq":
+                v = int(v1 != v2)
+            elif operation == "gtr":
+                v = int(v1 > v2)
+            elif operation == "lss":
+                v = int(v1 < v2)
+            elif operation == "geq":
+                v = int(v1 >= v2)
+            elif operation == "leq":
+                v = int(v1 <= v2)
+            
+            return self.set_register_value(r1, v)
+        
+        elif operation in ["int", "flt"]:
+            ok, v1 = self.eval_value(p1)
+            if not ok: return False
+            
+            r1 = p2
+
+            if operation == "int":
+                v = int(v1)
+
+            elif operation == "flt":
+                v = int(v1)
+
+            return self.set_register_value(r1, v)
+
+        elif operation == "jmp":
+            ok1, v1 = self.eval_value(p1)
+            ok2, l1 = self.eval_value(p2)
+
+            if not (ok1 & ok2): return False
+
+            if v1 == 1:
+                self.current_line_number = l1
+            else:
+                pass
+
+            return True
+
+        elif operation == "psh":
+            ok, v1 = self.eval_value(p1)
+            
+            if not ok: return False
+            
+            self.stack.append(v1)
+
+            return True
+
+        elif operation == "pop":
+            if len(self.stack) == 0: return False
+            r1 = p1
+
+            return self.set_register_value(r1, self.stack.pop())
+
+       elif operation == "len":
+           v = len(self.stack)
+           r1 = p1
+
+           return self.set_register_value(r1, v)
+
+       elif operation == "chr":
+           ok, v1 = self.eval_value(p1)
+           if not ok: return False
+
+           print(chr(v1))
+           return True
+
+       elif operation == "prt":
+           ok, v1 = self.eval_value(p1)
+
+           if (not ok) or (v1 < 0 or v1 > len(self.stack)) or (not isinstance(v1, int)): return False
+
+           for i in range(v1):
+               v = stack.pop()
+               print(chr(v))
+
+           return True
+
+       elif operation == "gch":
+           r1 = p1
+
+           inp = input()
+
+           if inp == "": v = -1
+           else: v = ord(inp[0])
+
+           self.set_register_value(r1, v)
+
+       elif operation == "gtx":
+           r1 = p1
+           inp = input()
+
+           if inp == "":
+               txt = [-1]
+               v = 0
+           else:
+               txt = [ord(c) for c in reversed(inp)]
+               v = len(inp)
+
+           self.stack += txt
+           return self.set_register_value(r1, v)
+
+        elif operation == "clr":
+            self.stack = []
+            return True
+
+        elif operation == "cpy":
+            if len(self.stack) == 0: return False
+
+            self.stack.append(self.stack[-1])
+            return True
