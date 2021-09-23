@@ -18,28 +18,28 @@ jmp $d :buzz
 jmp 1 :num
 
 :fizzbuzz
-psh 122
-psh 122
-psh 117
-psh 66
-psh 122
-psh 122
-psh 105
-psh 70
+psh 0 122
+psh 0 122
+psh 0 117
+psh 0 66
+psh 0 122
+psh 0 122
+psh 0 105
+psh 0 70
 jmp 1 :print
 
 :fizz
-psh 122
-psh 122
-psh 105
-psh 70
+psh 0 122
+psh 0 122
+psh 0 105
+psh 0 70
 jmp 1 :print
 
 :buzz
-psh 122
-psh 122
-psh 117
-psh 66
+psh 0 122
+psh 0 122
+psh 0 117
+psh 0 66
 jmp 1 :print
 
 :num
@@ -53,7 +53,7 @@ add 1 $g g
 
 mod $j 10 i
 add 48 $i i
-psh $i
+psh 0 $i
 div $j 10 j
 int $j j
 
@@ -63,10 +63,10 @@ jmp $h :num_loop
 jmp 1 :print
 
 :print
-len e
-prt $e
-psh 10
-prt 1
+len 0 e
+prt 0 $e
+psh 0 10
+prt 0 1
 
 lss $a 100 b
 jmp $b :loop

@@ -1,4 +1,6 @@
 #encoding: utf-8
+from stack import Stack, Stacks
+
 import string
 import math
 import sys
@@ -14,7 +16,7 @@ class VM:
         "equ", "neq", "gtr", "lss", "geq", "leq",
         "log",
         "int", "flt",
-        "psh", "pop", "clr", "len", "cpy",
+        "psh", "pop", "clr", "len", "cpy", "mks", "stn",
         "jmp", "gln",
         "chr", "prt", "gch", "gtx",
     ]
@@ -35,17 +37,19 @@ class VM:
     TWO_PARAMETERS = [
         "set",
         "int", "flt",
+        "psh", "pop", "len", "cpy",
         "jmp", 
+        "prt", "gtx",
     ]
 
     ONE_PARAMETER = [
-        "psh", "pop", "len",
+        "clr", "stn",
         "gln",
-        "chr", "prt", "gch", "gtx",
+        "chr", "gch",
     ]
     
     NO_PARAMETERS = [
-        "clr", "cpy", 
+        "mks",  
     ]
 
     PARAM_NUMBER = {o: 3 for o in THREE_PARAMETERS}
@@ -63,7 +67,7 @@ class VM:
 
         self.current_line_number = 0
 
-        self.stack = []
+        self.stacks = Stacks()
 
         self.register = [0 for i in range(len(self.REGISTER_LIST))]
         self.register[self.REGISTER_LIST.index("or")] = 1
@@ -271,25 +275,57 @@ class VM:
             return self.set_register_value(r1, self.current_line_number)
 
         elif operation == "psh":
-            ok, v1 = self.eval_value(p1)
+            ok1, s1 = self.eval_value(p1)
+            ok2, v1 = self.eval_value(p2)
             
-            if not ok: return False
+            if not (ok1 & ok2): return False
             
-            self.stack.append(v1)
-
-            return True
+            return self.stacks.push_value(s1, v1)
 
         elif operation == "pop":
-            if len(self.stack) == 0: return False
-            r1 = p1
+            ok, s1 = self.eval_value(p1)
+            if not ok: return False
 
-            return self.set_register_value(r1, self.stack.pop())
+            r1 = p2
+
+            ok, v = self.stacks.remove(s1)
+            if not ok: return False
+
+            return self.set_register_value(r1, v)
 
         elif operation == "len":
-           v = len(self.stack)
-           r1 = p1
+            ok, s1 = self.eval_value(p1)
+            if not ok: return False
 
-           return self.set_register_value(r1, v)
+            ok, v = self.stacks.get_length(s1)
+            if not ok: return False
+
+            r1 = p2
+
+            return self.set_register_value(r1, v)
+
+        elif operation == "clr":
+            ok, s1 = self.eval_value(p1)
+            if not ok: return False
+
+            return self.clear(s1)
+
+        elif operation == "cpy":
+            ok1, s1 = self.eval_value(p1)
+            ok2, s2 = self.eval_value(p2)
+            if not (ok1 & ok2): return False
+
+            return self.stacks.copy(s1, s2)
+
+        elif operation == "mks":
+            self.stacks.make_new_stack()
+            return True
+
+        elif operation == "stn":
+            r1 = p1
+            v = self.stacks.get_stack_number()
+
+            return self.set_register_value(r1, v)
 
         elif operation == "chr":
            ok, v1 = self.eval_value(p1)
@@ -299,12 +335,16 @@ class VM:
            return True
 
         elif operation == "prt":
-           ok, v1 = self.eval_value(p1)
+           ok1, s1 = self.eval_value(p1)
+           ok2, v1 = self.eval_value(p2)
 
-           if (not ok) or (v1 < 0 or v1 > len(self.stack)) or (not isinstance(v1, int)): return False
+           if not (ok1 & ok2): return False
+           if not isinstance(v1, int): return False
 
            for i in range(v1):
-               v = self.stack.pop()
+               ok, v = self.stacks.remove(s1)
+               if not ok: return False
+
                print(chr(v), end="")
 
            return True
@@ -320,7 +360,10 @@ class VM:
            self.set_register_value(r1, v)
 
         elif operation == "gtx":
-           r1 = p1
+           ok, s1 = self.eval_value(p1)
+           if not ok: return False
+
+           r1 = p2
            inp = input()
 
            if inp == "":
@@ -329,16 +372,10 @@ class VM:
            else:
                txt = [ord(c) for c in reversed(inp)]
                v = len(inp)
+           
+           for c in txt:
+               ok = self.stacks.push_value(s1, v)
+               if not ok: return False
 
-           self.stack += txt
            return self.set_register_value(r1, v)
 
-        elif operation == "clr":
-            self.stack = []
-            return True
-
-        elif operation == "cpy":
-            if len(self.stack) == 0: return False
-
-            self.stack.append(self.stack[-1])
-            return True
