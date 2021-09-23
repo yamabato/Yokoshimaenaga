@@ -5,11 +5,11 @@ import os
 
 from vm import VM
 
-help_text == """\
+help_text = """\
 python3 run.py [Yokoshimaenaga_File.yse]
 """
 
-args = sys.argv()
+args = sys.argv
 if len(args) == 1:
     print(help_text)
     sys.exit(-1)

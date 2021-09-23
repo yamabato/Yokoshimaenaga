@@ -67,7 +67,10 @@ class VM:
         self.label = {}
 
     def set_register_value(self, register, value):
-        return self.set_register_number_value(self.eval_value(register), value)
+        ok, rn = self.eval_value(register)
+        if not ok: return False
+
+        return self.set_register_number_value(rn, value)
 
     def set_register_number_value(self, rn, value):
         if rn < 0 or rn >= self.REGISTER_N:
@@ -76,7 +79,7 @@ class VM:
         if not (isinstance(value, int) or isinstance(value, float)):
             return False
 
-        if self.REGISTER_LIST[rn] in [ZERO_REGISTER_NAME, ONE_REGISTER_NAME]:
+        if self.REGISTER_LIST[rn] in [self.ZERO_REGISTER_NAME, self.ONE_REGISTER_NAME]:
             return True
 
         self.register[rn] = value
@@ -108,7 +111,9 @@ class VM:
 
         #register value
         if value[0] == "$" and value[1:] in self.REGISTER_LIST:
-            return True, self.register[self.eval_value(value[1:])]
+            ok, rn = self.eval_value(value[1:])
+            if not ok: return False
+            return True, self.register[rn]
 
         #label name
         if value[0] == ":" and value[1:] in self.label:
@@ -130,7 +135,7 @@ class VM:
         self.current_line_number += 1
 
     def run(self):
-        while self.current_line_number < len(lines):
+        while self.current_line_number < len(self.lines):
             ok = self.eval_line()
             if not ok:
                 self.error()
@@ -144,7 +149,8 @@ class VM:
         if line[0][0] in [":", ";"]:
             self.increment_line_number()
             return True
-
+        
+        line = line.split()
         operation = line[0]
 
         if operation not in self.OPERATIONS:
@@ -153,7 +159,7 @@ class VM:
         params = line[1:]
         param_n = len(params)
 
-        if param_n != PARAM_NUMBER[operation]:
+        if param_n != self.PARAM_NUMBER[operation]:
             return False
         
         ok = self.execute_operation(operation, *params)
@@ -162,13 +168,14 @@ class VM:
         return ok
         
     def execute_operation(self, operation, p1=None, p2=None, p3=None):
-        if operation in self.OPERATIONS:
+        if operation in self.OPERATORS:
             ok1, v1 = self.eval_value(p1)
             ok2, v2 = self.eval_value(p2)
 
             if not (ok1 & ok2): return False
 
             r1 = p3
+            v = -1
 
             if operation == "add":
                 v = v1 + v2
