@@ -1,0 +1,5 @@
+add $zr 48 a
+chr $a
+
+add $or 48 b
+chr $b

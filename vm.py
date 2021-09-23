@@ -63,6 +63,7 @@ class VM:
         self.stack = []
 
         self.register = [0 for i in range(len(self.REGISTER_LIST))]
+        self.register[self.REGISTER_LIST.index("or")] = 1
 
         self.label = {}
 
