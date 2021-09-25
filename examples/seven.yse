@@ -1,0 +1,72 @@
+set 0 a
+set 1002 x
+
+:loop
+add 1 $a a
+
+mod $a 7 c
+equ $c 0 d
+jmp $d :seven
+
+:num_
+log 10 $a f
+add 1 $f f
+int $f f
+set 0 g
+set $a j
+:num_loop_
+add 1 $g g
+
+mod $j 10 i
+add 48 $i i
+psh 0 $i
+div $j 10 j
+int $j j
+
+lss $g $f h
+jmp $h :num_loop_
+
+:check
+pop 0 m
+equ $m 55 n
+jmp $n :seven
+
+len 0 k
+lss 0 $k l
+jmp $l :check
+
+jmp 1 :num
+:seven
+psh 0 33
+psh 0 12531
+psh 0 12497
+clr 0
+psh 0 128079
+jmp 1 :print
+
+:num
+clr 0
+log 10 $a f
+add 1 $f f
+int $f f
+set 0 g
+set $a j
+:num_loop
+add 1 $g g
+
+mod $j 10 i
+add 48 $i i
+psh 0 $i
+div $j 10 j
+int $j j
+
+lss $g $f h
+jmp $h :num_loop
+
+:print
+len 0 e
+prt 0 $e
+chr 10
+
+gtr $x $a b
+jmp $b :loop

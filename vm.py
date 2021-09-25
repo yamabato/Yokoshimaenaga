@@ -137,21 +137,23 @@ class VM:
                 self.set_label(line[0], n)
 
     def error(self):
-        print(f"An ERROR occurred on line {self.current_line_number + 1}.")
+        print(f"An ERROR occurred on line {self.current_line_number}.")
 
-        sys.exit(-1)
+        return False
 
     def increment_line_number(self):
         self.current_line_number += 1
 
     def run(self):
         while self.current_line_number < len(self.lines):
-            ok = self.eval_line()
+            line = self.lines[self.current_line_number]
+            ok = self.eval_line(line)
             if not ok:
                 self.error()
+                return False
+        return True
 
-    def eval_line(self):
-        line = self.lines[self.current_line_number]
+    def eval_line(self, line):
         if len(line) == 0:
             self.increment_line_number()
             return True
@@ -308,7 +310,7 @@ class VM:
             ok, s1 = self.eval_value(p1)
             if not ok: return False
 
-            return self.clear(s1)
+            return self.stacks.clear(s1)
 
         elif operation == "cpy":
             ok1, s1 = self.eval_value(p1)

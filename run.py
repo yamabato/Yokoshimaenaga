@@ -4,9 +4,10 @@ import sys
 import os
 
 from vm import VM
+from debugger import Debugger
 
 help_text = """\
-python3 run.py [Yokoshimaenaga_File.yse]
+python3 run.py [Yokoshimaenaga_File.yse] [args]
 """
 
 args = sys.argv
@@ -15,6 +16,7 @@ if len(args) == 1:
     sys.exit(-1)
 
 file_name = args[1]
+params = args[2:]
 
 if not os.path.isfile(file_name):
     print(f"File {file_name} not found.")
@@ -27,5 +29,12 @@ elif file_name[-4:] != ".yse":
 with open(file_name, mode="r", encoding="utf-8") as f:
     code = f.read()
 
-vm = VM(code)
-vm.run()
+d = False
+if "-d" in params: d = True
+
+if d:
+    debugger = Debugger(code)
+    debugger.debug()
+else:
+    vm = VM(code)
+    vm.run()
