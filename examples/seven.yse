@@ -9,7 +9,7 @@ equ $c 0 d
 jmp $d :seven
 
 :num_
-log 10 $a f
+l10 $a f
 add 1 $f f
 int $f f
 set 0 g
@@ -46,7 +46,7 @@ jmp 1 :print
 
 :num
 clr 0
-log 10 $a f
+l10 $a f
 add 1 $f f
 int $f f
 set 0 g

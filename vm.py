@@ -14,7 +14,7 @@ class VM:
         "add", "sub", "mul", "div", "pow", "mod",
         "and", "or", "xor",
         "equ", "neq", "gtr", "lss", "geq", "leq",
-        "log",
+        "log", "l10", "lg2",
         "int", "flt",
         "psh", "pop", "clr", "len", "cpy", "mks", "stn",
         "jmp", "gln",
@@ -38,6 +38,7 @@ class VM:
         "set",
         "int", "flt",
         "psh", "pop", "len", "cpy",
+        "l10", "lg2", 
         "jmp", 
         "prt", "gtx",
     ]
@@ -244,7 +245,24 @@ class VM:
             v = math.log(v2, v1)
 
             return self.set_register_value(r1, v)
+
+        elif operation == "l10":
+            ok, v1 = self.eval_value(p1)
+            if not ok: return false
+            
+            r1 = p2
+            v = math.log10(v1)
+            return self.set_register_value(r1, v)
+
+        elif operation == "lg2":
+            ok, v1 = self.eval_value(p1)
+            if not ok: return false
+            
+            r1 = p2
+            v = math.log2(v1)
+            return self.set_register_value(r1, v)
         
+
         elif operation in ["int", "flt"]:
             ok, v1 = self.eval_value(p1)
             if not ok: return False
