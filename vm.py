@@ -18,6 +18,7 @@ class VM:
         "int", "flt",
         "psh", "pop", "clr", "len", "cpy", "mks", "stn",
         "jmp", "gln",
+        "stv", "ldr", "lds",
         "chr", "prt", "gch", "gtx",
     ]
 
@@ -40,6 +41,7 @@ class VM:
         "psh", "pop", "len", "cpy",
         "l10", "lg2", 
         "jmp", 
+        "stv", "ldr", "lds",
         "prt", "gtx",
     ]
 
@@ -74,6 +76,7 @@ class VM:
         self.register[self.REGISTER_LIST.index("or")] = 1
 
         self.label = {}
+        self.environment = {}
         self.scan_labels()
 
     def set_register_value(self, register, value):
@@ -95,6 +98,18 @@ class VM:
         self.register[rn] = value
 
         return True
+
+    def set_variable(self, name, value):
+        if name[0].isdigit(): return False
+
+        self.environment[name] = value
+
+        return True
+
+    def load_variable(self, name):
+        if name in self.environment: return False, -1
+
+        return True, self.environment[name]
 
     def set_label(self, label, number):
         self.label[label[1:]] = number
@@ -346,6 +361,32 @@ class VM:
             v = self.stacks.get_stack_number()
 
             return self.set_register_value(r1, v)
+
+        elif operation == "stv":
+            l1 = p1
+            ok, v1 = self.eval_value(p2)
+
+            if not ok: return False
+
+            return self.set_variable(l1, v1)
+
+        elif operation == "ldr":
+            l1 = p1
+            r1 = p2
+
+            ok, v = self.load_variable(l1)
+            if not ok: return False
+
+            return self.set_register_value(r1, v)
+
+        elif operation == "lds":
+            l1 = p1
+            ok, s1 = self.eval_value(p2)
+
+            ok, v = self.load_variable(l1)
+            if not ok: return False
+
+            return self.stacks.push_value(s1, v)
 
         elif operation == "chr":
            ok, v1 = self.eval_value(p1)
